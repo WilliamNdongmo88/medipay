@@ -1,0 +1,53 @@
+package com.medipay.controller;
+
+import com.medipay.entity.QRCode;
+import com.medipay.entity.Transaction;
+import com.medipay.service.PaymentService;
+import com.medipay.service.QRCodeService;
+import com.medipay.service.UserDetailsImpl;
+import lombok.Data;
+import lombok.RequiredArgsConstructor;
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.web.bind.annotation.*;
+
+import java.math.BigDecimal;
+import java.util.List;
+import java.util.Map;
+
+@RestController
+@RequestMapping("/api/payment" )
+@RequiredArgsConstructor
+public class PaymentController {
+    private final PaymentService paymentService;
+    private final QRCodeService qrCodeService;
+
+    @PostMapping("/scan")
+    public ResponseEntity<?> processPayment(
+            @AuthenticationPrincipal UserDetailsImpl currentUser,
+            @RequestBody PaymentRequest paymentRequest) {
+
+        // Validation du QR Code
+        QRCode qrCode = qrCodeService.validateAndGetQRCode(paymentRequest.getQrCodeValue());
+
+        // Exécution du paiement
+        Transaction transaction = paymentService.processPayment(
+                currentUser.getId(),
+                qrCode.getPharmacist().getId(),
+                qrCode.getAmount(), // Ou le montant saisi si QR statique
+                qrCode.getCodeValue()
+        );
+
+        return ResponseEntity.ok(Map.of("message", "Paiement effectué", "transactionId", transaction.getId()));
+    }
+
+    @GetMapping("/history")
+    public ResponseEntity<List<Transaction>> getMyHistory(@AuthenticationPrincipal UserDetailsImpl currentUser) {
+        return ResponseEntity.ok(paymentService.getUserHistory(currentUser.getId()));
+    }
+}
+
+@Data
+class PaymentRequest {
+    private String qrCodeValue;
+}
