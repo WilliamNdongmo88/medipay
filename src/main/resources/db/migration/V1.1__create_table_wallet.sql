@@ -10,7 +10,9 @@ CREATE TABLE wallets (
     CONSTRAINT fk_wallet_user
         FOREIGN KEY (user_id)
         REFERENCES users(id)
-        ON DELETE CASCADE
+        ON DELETE CASCADE,
+
+    CONSTRAINT chk_balance_positive CHECK (balance >= 0)
 );
 
 CREATE INDEX idx_wallets_last_updated ON wallets(last_updated);

@@ -1,11 +1,3 @@
--- ENUM
-CREATE TYPE role_enum AS ENUM (
-    'ROLE_ADMIN',
-    'ROLE_CLIENT',
-    'ROLE_PHARMACIST'
-);
-
--- TABLE
 CREATE TABLE users (
     id BIGSERIAL PRIMARY KEY,
 
@@ -13,11 +5,13 @@ CREATE TABLE users (
     email VARCHAR(50) NOT NULL UNIQUE,
     password VARCHAR(120) NOT NULL,
 
-    role role_enum,
+    role VARCHAR(20),
 
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+
+    CONSTRAINT chk_role
+    CHECK (role IN ('ROLE_ADMIN','ROLE_CLIENT','ROLE_PHARMACIST'))
 );
 
--- Index utiles (non redondants)
 CREATE INDEX idx_users_role ON users(role);
 CREATE INDEX idx_users_created_at ON users(created_at);
