@@ -1,5 +1,7 @@
 package com.medipay.entity;
 
+import com.medipay.enums.TransactionStatus;
+import com.medipay.enums.TransactionType;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -42,13 +44,5 @@ public class Transaction {
     protected void onCreate() {
         timestamp = LocalDateTime.now();
     }
-}
-
-enum TransactionType {
-    DEPOSIT, PAYMENT, RESET
-}
-
-enum TransactionStatus {
-    PENDING, COMPLETED, FAILED
 }
 
