@@ -1,5 +1,9 @@
 package com.medipay.controller;
 
+import com.medipay.dto.AuthResponse;
+import com.medipay.dto.LoginRequest;
+import com.medipay.dto.RefreshRequest;
+import com.medipay.dto.SignupRequest;
 import com.medipay.enums.Role;
 import com.medipay.entity.User;
 import com.medipay.service.AuthService;
@@ -24,7 +28,7 @@ public class AuthController {
     private final JwtUtils jwtUtils;
 
     @PostMapping("/signup")
-    public ResponseEntity<?> registerUser(@RequestBody SignupRequest signupRequest) {
+    public ResponseEntity<?> registerUser(SignupRequest signupRequest) {
         User user = authService.registerUser(
                 signupRequest.getUsername(),
                 signupRequest.getEmail(),
@@ -35,27 +39,13 @@ public class AuthController {
     }
 
     @PostMapping("/signin")
-    public ResponseEntity<?> authenticateUser(@RequestBody LoginRequest loginRequest) {
-        Authentication authentication = authenticationManager.authenticate(
-                new UsernamePasswordAuthenticationToken(loginRequest.getUsername(), loginRequest.getPassword()));
+    public AuthResponse authenticateUser(@RequestBody LoginRequest request) {
+        return authService.login(request);
+    }
 
-        SecurityContextHolder.getContext().setAuthentication(authentication);
-        String jwt = jwtUtils.generateJwtToken(authentication);
-
-        return ResponseEntity.ok(Map.of("token", jwt, "type", "Bearer"));
+    @PostMapping("/refresh")
+    public AuthResponse refresh(@RequestBody RefreshRequest request) {
+        return authService.refreshToken(request.getRefreshToken());
     }
 }
 
-@Data
-class SignupRequest {
-    private String username;
-    private String email;
-    private String password;
-    private Role role;
-}
-
-@Data
-class LoginRequest {
-    private String username;
-    private String password;
-}

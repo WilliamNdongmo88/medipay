@@ -1,6 +1,7 @@
 package com.medipay.utils;
 
 import com.medipay.service.UserDetailsImpl;
+import com.medipay.entity.User;
 import io.jsonwebtoken.*;
 import io.jsonwebtoken.io.Decoders;
 import io.jsonwebtoken.security.Keys;
@@ -27,13 +28,34 @@ public class JwtUtils {
     public String generateJwtToken(Authentication authentication) {
         UserDetailsImpl userPrincipal = (UserDetailsImpl) authentication.getPrincipal();
 
-        return buildToken(userPrincipal, jwtExpirationMs);
+        assert userPrincipal != null;
+        return buildToken(userPrincipal);
     }
 
-    private String buildToken(UserDetailsImpl user, long expiration) {
+    private String buildToken(UserDetailsImpl user) {
         Map<String, Object> claims = Map.of(
                 "id", user.getId(),
                 "role", user.getAuthorities(),
+                "name", user.getUsername(),
+                "email", user.getEmail()
+        );
+        return Jwts.builder()
+                .setClaims(claims)
+                .setSubject((user.getUsername()))
+                .setIssuedAt(new Date())
+                .setExpiration(new Date((new Date()).getTime() + jwtExpirationMs))
+                .signWith(key(), SignatureAlgorithm.HS256)
+                .compact();
+    }
+
+    public String generateToken(User user) {
+        return buildTokenWithUser(user);
+    }
+
+    private String buildTokenWithUser(User user) {
+        Map<String, Object> claims = Map.of(
+                "id", user.getId(),
+                "role", user.getRole(),
                 "name", user.getUsername(),
                 "email", user.getEmail()
         );

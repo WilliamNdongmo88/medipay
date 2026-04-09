@@ -18,7 +18,7 @@ public class QRCode {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "pharmacist_id")
     private User pharmacist;
 
