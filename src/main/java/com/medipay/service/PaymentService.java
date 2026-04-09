@@ -1,6 +1,7 @@
 package com.medipay.service;
 
 import com.medipay.entity.Transaction;
+import com.medipay.entity.User;
 import com.medipay.enums.TransactionType;
 import com.medipay.enums.TransactionStatus;
 import com.medipay.entity.Wallet;
@@ -8,6 +9,10 @@ import com.medipay.repository.TransactionRepository;
 import com.medipay.repository.UserRepository;
 import com.medipay.repository.WalletRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -18,12 +23,20 @@ import java.util.List;
 @RequiredArgsConstructor
 public class PaymentService {
     private final WalletRepository walletRepository;
+    private final AuthenticationManager authenticationManager;
     private final TransactionRepository transactionRepository;
     private final UserRepository userRepository;
 
     // 1. Créditer un client (Réservé à l'Admin)
     @Transactional
     public Transaction creditClient(Long userId, BigDecimal amount) {
+        UserDetailsImpl userDetails = (UserDetailsImpl) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        System.out.println("userDetails: "+ userDetails);
+
+        Wallet senderWallet = walletRepository.findByUserId(userDetails.getId())
+                .orElseThrow(() -> new RuntimeException("Portefeuille non trouvé pour l'utilisateur ID: " + userId));
+
+
         Wallet wallet = walletRepository.findByUserId(userId)
                 .orElseThrow(() -> new RuntimeException("Portefeuille non trouvé pour l'utilisateur ID: " + userId));
 
@@ -31,6 +44,7 @@ public class PaymentService {
         walletRepository.save(wallet);
 
         Transaction transaction = new Transaction();
+        transaction.setSenderWallet(senderWallet);
         transaction.setReceiverWallet(wallet);
         transaction.setAmount(amount);
         transaction.setType(TransactionType.DEPOSIT);
