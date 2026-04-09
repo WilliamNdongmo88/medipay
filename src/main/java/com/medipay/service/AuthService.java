@@ -2,10 +2,12 @@ package com.medipay.service;
 
 import com.medipay.dto.AuthResponse;
 import com.medipay.dto.LoginRequest;
+import com.medipay.dto.SignupRequest;
 import com.medipay.entity.RefreshToken;
 import com.medipay.entity.User;
 import com.medipay.entity.Wallet;
 import com.medipay.enums.Role;
+import com.medipay.mapper.UserMapper;
 import com.medipay.repository.RefreshTokenRepository;
 import com.medipay.repository.UserRepository;
 import com.medipay.repository.WalletRepository;
@@ -27,27 +29,23 @@ import java.math.BigDecimal;
 public class AuthService {
     private final UserRepository userRepository;
     private final WalletRepository walletRepository;
-    private final PasswordEncoder passwordEncoder;
     private final AuthenticationManager authenticationManager;
     private final RefreshTokenService refreshTokenService;
     private final RefreshTokenRepository refreshTokenRepository;
     private final JwtUtils jwtUtils;
+    private final UserMapper userMapper;
 
     @Transactional
-    public User registerUser(String username, String email, String password, Role role) {
-        if (userRepository.existsByUsername(username)) {
+    public User registerUser(SignupRequest request) {
+        if (userRepository.existsByUsername(request.getUsername())) {
             throw new RuntimeException("Erreur: Le pseudo est déjà pris !");
         }
-        if (userRepository.existsByEmail(email)) {
+        if (userRepository.existsByEmail(request.getEmail())) {
             throw new RuntimeException("Erreur: L'email est déjà utilisé !");
         }
 
         // 1. Création de l'utilisateur
-        User user = new User();
-        user.setUsername(username);
-        user.setEmail(email);
-        user.setPassword(passwordEncoder.encode(password));
-        user.setRole(role);
+        User user = userMapper.toEntity(request);
         User savedUser = userRepository.save(user);
 
         // 2. Initialisation du Wallet associé

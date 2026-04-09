@@ -1,17 +1,17 @@
 package com.medipay.controller;
 
+import com.medipay.dto.PaymentRequest;
+import com.medipay.dto.TransactionResponse;
 import com.medipay.entity.QRCode;
 import com.medipay.entity.Transaction;
 import com.medipay.service.PaymentService;
 import com.medipay.service.QRCodeService;
 import com.medipay.service.UserDetailsImpl;
-import lombok.Data;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
-import java.math.BigDecimal;
 import java.util.List;
 import java.util.Map;
 
@@ -42,12 +42,7 @@ public class PaymentController {
     }
 
     @GetMapping("/history")
-    public ResponseEntity<List<Transaction>> getMyHistory(@AuthenticationPrincipal UserDetailsImpl currentUser) {
+    public ResponseEntity<List<TransactionResponse>> getMyHistory(@AuthenticationPrincipal UserDetailsImpl currentUser) {
         return ResponseEntity.ok(paymentService.getUserHistory(currentUser.getId()));
     }
-}
-
-@Data
-class PaymentRequest {
-    private String qrCodeValue;
 }

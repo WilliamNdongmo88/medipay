@@ -1,15 +1,12 @@
 package com.medipay.dto;
 
 import com.medipay.enums.Role;
-import lombok.Builder;
 import lombok.Data;
 
 @Data
-public class SignupRequest {
-
+public class UserResponse {
+    private Long id;
     private String username;
     private String email;
-    private String password;
     private Role role;
-
 }

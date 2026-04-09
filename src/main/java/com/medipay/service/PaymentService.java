@@ -1,10 +1,12 @@
 package com.medipay.service;
 
+import com.medipay.dto.TransactionResponse;
 import com.medipay.entity.Transaction;
 import com.medipay.entity.User;
 import com.medipay.enums.TransactionType;
 import com.medipay.enums.TransactionStatus;
 import com.medipay.entity.Wallet;
+import com.medipay.mapper.TransactionMapper;
 import com.medipay.repository.TransactionRepository;
 import com.medipay.repository.UserRepository;
 import com.medipay.repository.WalletRepository;
@@ -26,6 +28,7 @@ public class PaymentService {
     private final AuthenticationManager authenticationManager;
     private final TransactionRepository transactionRepository;
     private final UserRepository userRepository;
+    private final TransactionMapper transactionMapper;
 
     // 1. Créditer un client (Réservé à l'Admin)
     @Transactional
@@ -107,10 +110,13 @@ public class PaymentService {
         return transactionRepository.save(transaction);
     }
 
-    public List<Transaction> getUserHistory(Long userId) {
+    public List<TransactionResponse> getUserHistory(Long userId) {
         Wallet wallet = walletRepository.findByUserId(userId)
                 .orElseThrow(() -> new RuntimeException("Portefeuille non trouvé"));
-        return transactionRepository.findBySenderWalletOrReceiverWalletOrderByTimestampDesc(wallet, wallet);
+
+        List<Transaction> transactions = transactionRepository.findAllWithUsers(wallet);
+
+        return transactionMapper.toResponseList(transactions);
     }
 }
 

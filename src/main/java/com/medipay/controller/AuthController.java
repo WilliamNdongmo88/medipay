@@ -4,17 +4,12 @@ import com.medipay.dto.AuthResponse;
 import com.medipay.dto.LoginRequest;
 import com.medipay.dto.RefreshRequest;
 import com.medipay.dto.SignupRequest;
-import com.medipay.enums.Role;
 import com.medipay.entity.User;
 import com.medipay.service.AuthService;
 import com.medipay.utils.JwtUtils;
-import lombok.Data;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
-import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.Map;
@@ -29,18 +24,12 @@ public class AuthController {
 
     @PostMapping("/signup")
     public ResponseEntity<?> registerUser(@RequestBody SignupRequest signupRequest) {
-        User user = authService.registerUser(
-                signupRequest.getUsername(),
-                signupRequest.getEmail(),
-                signupRequest.getPassword(),
-                signupRequest.getRole()
-        );
+        User user = authService.registerUser(signupRequest);
         return ResponseEntity.ok(Map.of("message", "Utilisateur enregistré avec succès !", "userId", user.getId()));
     }
 
     @PostMapping("/signin")
     public AuthResponse authenticateUser(@RequestBody LoginRequest request) {
-
         return authService.login(request);
     }
 

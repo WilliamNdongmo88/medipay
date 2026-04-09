@@ -1,5 +1,7 @@
 package com.medipay.config;
 
+import com.medipay.dto.LoginRequest;
+import com.medipay.dto.SignupRequest;
 import com.medipay.enums.Role;
 import com.medipay.repository.UserRepository;
 import com.medipay.service.AuthService;
@@ -21,15 +23,16 @@ public class DataInitializer implements CommandLineRunner {
         if (userRepository.count() == 0) {
             logger.info("Base de données vide. Initialisation de l'administrateur par défaut...");
 
-            authService.registerUser(
-                    "admin",
-                    "williamndongmo899@gmail.com",
-                    "admin123",
-                    Role.ROLE_ADMIN
-            );
+            SignupRequest request = new SignupRequest();
+            request.setUsername("williamndongmo");
+            request.setEmail("williamndongmo899@gmail.com");
+            request.setPassword("admin123");
+            request.setRole(Role.ROLE_ADMIN);
+
+            authService.registerUser(request);
 
             logger.info("Administrateur créé avec succès !");
-            logger.info("Pseudo : admin | Mot de passe : admin123");
+            logger.info("Pseudo : williamndongmo | Mot de passe : admin123");
         }
     }
 }

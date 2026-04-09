@@ -1,18 +1,17 @@
 package com.medipay.controller;
 
+import com.medipay.dto.QRCodeRequest;
 import com.medipay.entity.QRCode;
 import com.medipay.entity.User;
 import com.medipay.repository.UserRepository;
 import com.medipay.service.QRCodeService;
 import com.medipay.service.UserDetailsImpl;
-import lombok.Data;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
-import java.math.BigDecimal;
 import java.util.Map;
 
 @RestController
@@ -36,9 +35,3 @@ public class QRCodeController {
         return ResponseEntity.ok(Map.of("qrCodeValue", qrCode.getCodeValue(), "amount", qrCode.getAmount()));
     }
 }
-
-@Data
-class QRCodeRequest {
-    private BigDecimal amount;
-}
-
