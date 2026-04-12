@@ -28,7 +28,6 @@ public class TransactionService {
             dto.setStatus(tx.getStatus());
             dto.setTimestamp(tx.getTimestamp());
             dto.setDescription(tx.getDescription());
-            //dto.setReferenceQr(tx.getReferenceQr());
             return dto;
         }).collect(Collectors.toList());
     }

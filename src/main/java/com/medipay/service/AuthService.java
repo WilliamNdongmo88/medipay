@@ -1,8 +1,6 @@
 package com.medipay.service;
 
-import com.medipay.dto.AuthResponse;
-import com.medipay.dto.LoginRequest;
-import com.medipay.dto.SignupRequest;
+import com.medipay.dto.*;
 import com.medipay.entity.RefreshToken;
 import com.medipay.entity.User;
 import com.medipay.entity.Wallet;
@@ -13,6 +11,8 @@ import com.medipay.repository.UserRepository;
 import com.medipay.repository.WalletRepository;
 import com.medipay.utils.JwtUtils;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
@@ -23,6 +23,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
+import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
@@ -34,6 +35,7 @@ public class AuthService {
     private final RefreshTokenRepository refreshTokenRepository;
     private final JwtUtils jwtUtils;
     private final UserMapper userMapper;
+    private final PasswordEncoder passwordEncoder;
 
     @Transactional
     public User registerUser(SignupRequest request) {
@@ -90,5 +92,35 @@ public class AuthService {
         String accessToken = jwtUtils.generateToken(refreshToken.getUser());
 
         return new AuthResponse(accessToken, requestToken);
+    }
+
+    @Transactional
+    public ResponseEntity<?> verifyEmail(VerifyEmailRequest request){
+        boolean exists = userRepository.existsByEmail(request.getEmail());
+
+        if (!exists) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body(new RuntimeException("Erreur : Aucun compte n'est associé à cet email."));
+        }
+
+        return ResponseEntity.ok(new RuntimeException("Email vérifié avec succès."));
+    }
+
+    @Transactional
+    public ResponseEntity<?> resetPassword(ResetPasswordRequest request){
+        Optional<User> userOptional = userRepository.findByEmail(request.getEmail());
+
+        if (userOptional.isEmpty()) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body(new RuntimeException("Erreur : Utilisateur introuvable."));
+        }
+
+        User user = userOptional.get();
+        // Encodage du nouveau mot de passe avec BCrypt
+        user.setPassword(passwordEncoder.encode(request.getNewPassword()));
+
+        userRepository.save(user);
+
+        return ResponseEntity.ok(new RuntimeException("Mot de passe réinitialisé avec succès !"));
     }
 }

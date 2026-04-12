@@ -1,26 +1,22 @@
 package com.medipay.controller;
 
-import com.medipay.dto.AuthResponse;
-import com.medipay.dto.LoginRequest;
-import com.medipay.dto.RefreshRequest;
-import com.medipay.dto.SignupRequest;
+import com.medipay.dto.*;
 import com.medipay.entity.User;
 import com.medipay.service.AuthService;
-import com.medipay.utils.JwtUtils;
+import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.Map;
+import java.util.Optional;
 
 @RestController
 @RequestMapping("/api/auth" )
 @RequiredArgsConstructor
 public class AuthController {
     private final AuthService authService;
-    private final AuthenticationManager authenticationManager;
-    private final JwtUtils jwtUtils;
 
     @PostMapping("/signup")
     public ResponseEntity<?> registerUser(@RequestBody SignupRequest signupRequest) {
@@ -36,6 +32,18 @@ public class AuthController {
     @PostMapping("/refresh")
     public AuthResponse refresh(@RequestBody RefreshRequest request) {
         return authService.refreshToken(request.getRefreshToken());
+    }
+
+    // 1. Vérifier si l'email existe
+    @PostMapping("/verify-email")
+    public ResponseEntity<?> verifyEmail(@RequestBody VerifyEmailRequest request) {
+        return authService.verifyEmail(request);
+    }
+
+    // 2. Mettre à jour le mot de passe
+    @PostMapping("/reset-password")
+    public ResponseEntity<?> resetPassword(@RequestBody ResetPasswordRequest request) {
+        return authService.resetPassword(request);
     }
 }
 

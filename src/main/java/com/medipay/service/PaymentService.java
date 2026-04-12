@@ -16,6 +16,7 @@ import org.springframework.security.authentication.UsernamePasswordAuthenticatio
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
@@ -68,6 +69,15 @@ public class PaymentService {
 
         // Vérification cruciale du solde
         if (clientWallet.getBalance().compareTo(amount) < 0) {
+            // Enregistrement de la transaction
+//            Transaction transaction = new Transaction();
+//            transaction.setSenderWallet(clientWallet);
+//            transaction.setReceiverWallet(pharmacistWallet);
+//            transaction.setAmount(amount);
+//            transaction.setType(TransactionType.PAYMENT);
+//            transaction.setStatus(TransactionStatus.FAILED);
+//            transaction.setDescription("Solde insuffisant pour effectuer ce paiement ");
+//            transactionRepository.save(transaction);
             throw new RuntimeException("Solde insuffisant pour effectuer ce paiement");
         }
 
