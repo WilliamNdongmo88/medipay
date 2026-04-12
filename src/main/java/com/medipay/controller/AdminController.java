@@ -1,9 +1,11 @@
 package com.medipay.controller;
 
 import com.medipay.dto.CreditRequest;
+import com.medipay.dto.TransactionResponse;
 import com.medipay.dto.UserResponse;
 import com.medipay.entity.Transaction;
 import com.medipay.service.PaymentService;
+import com.medipay.service.TransactionService;
 import com.medipay.service.UserService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -20,6 +22,7 @@ import java.util.Map;
 public class AdminController {
     private final PaymentService paymentService;
     private final UserService userService;
+    private final TransactionService transactionService;
 
     @PostMapping("/credit")
     public ResponseEntity<?> creditClient(@RequestBody CreditRequest creditRequest) {
@@ -40,6 +43,12 @@ public class AdminController {
     public ResponseEntity<List<UserResponse>> getAllUsers() {
         List<UserResponse> users = userService.getAllUsersForAdmin();
         return ResponseEntity.ok(users);
+    }
+
+    @GetMapping("/transactions")
+    public ResponseEntity<List<TransactionResponse>> getAllTransactions() {
+        List<TransactionResponse> transactions = transactionService.getAllTransactionsForAdmin();
+        return ResponseEntity.ok(transactions);
     }
 }
 

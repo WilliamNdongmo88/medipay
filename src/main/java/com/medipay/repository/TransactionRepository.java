@@ -14,7 +14,7 @@ import java.util.List;
 public interface TransactionRepository extends JpaRepository<Transaction, Long> {
     List<Transaction> findBySenderWalletOrderByTimestampDesc(Wallet senderWallet);
     List<Transaction> findByReceiverWalletOrderByTimestampDesc(Wallet receiverWallet);
-
+    List<Transaction> findAllByOrderByTimestampDesc();
 
     @Query("""
         SELECT t FROM Transaction t

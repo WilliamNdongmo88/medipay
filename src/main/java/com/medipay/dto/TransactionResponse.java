@@ -20,4 +20,5 @@ public class TransactionResponse {
     private String receiverName;
     private BigDecimal senderBalance;
     private BigDecimal receiverBalance;
+//    private String referenceQr;
 }
