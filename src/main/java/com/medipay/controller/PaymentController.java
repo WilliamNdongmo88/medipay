@@ -10,6 +10,7 @@ import com.medipay.service.UserDetailsImpl;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -43,6 +44,7 @@ public class PaymentController {
 
     @GetMapping("/history")
     public ResponseEntity<List<TransactionResponse>> getMyHistory(@AuthenticationPrincipal UserDetailsImpl currentUser) {
+        System.out.println("USER: " + SecurityContextHolder.getContext().getAuthentication());
         return ResponseEntity.ok(paymentService.getUserHistory(currentUser.getId()));
     }
 }

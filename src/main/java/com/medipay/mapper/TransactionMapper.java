@@ -30,6 +30,9 @@ public class TransactionMapper {
             response.setSenderName(
                     transaction.getSenderWallet().getUser().getUsername()
             );
+            response.setSenderBalance(
+                    transaction.getSenderWallet().getBalance()
+            );
         }
 
         // 🔥 Receiver
@@ -37,6 +40,9 @@ public class TransactionMapper {
                 transaction.getReceiverWallet().getUser() != null) {
             response.setReceiverName(
                     transaction.getReceiverWallet().getUser().getUsername()
+            );
+            response.setReceiverBalance(
+                    transaction.getReceiverWallet().getBalance()
             );
         }
 

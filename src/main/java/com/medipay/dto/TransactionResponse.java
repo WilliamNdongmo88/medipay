@@ -1,5 +1,6 @@
 package com.medipay.dto;
 
+import com.medipay.entity.Wallet;
 import com.medipay.enums.TransactionStatus;
 import com.medipay.enums.TransactionType;
 import lombok.Data;
@@ -17,4 +18,6 @@ public class TransactionResponse {
     private LocalDateTime timestamp;
     private String senderName;
     private String receiverName;
+    private BigDecimal senderBalance;
+    private BigDecimal receiverBalance;
 }
