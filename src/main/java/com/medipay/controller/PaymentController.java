@@ -2,13 +2,16 @@ package com.medipay.controller;
 
 import com.medipay.dto.PaymentRequest;
 import com.medipay.dto.TransactionResponse;
+import com.medipay.dto.UserResponse;
 import com.medipay.entity.QRCode;
 import com.medipay.entity.Transaction;
+import com.medipay.service.AuthService;
 import com.medipay.service.PaymentService;
 import com.medipay.service.QRCodeService;
 import com.medipay.service.UserDetailsImpl;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
+import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
@@ -22,6 +25,8 @@ import java.util.Map;
 public class PaymentController {
     private final PaymentService paymentService;
     private final QRCodeService qrCodeService;
+    private final SimpMessagingTemplate messagingTemplate;
+    private final AuthService authService;
 
     @PostMapping("/scan")
     public ResponseEntity<?> processPayment(
@@ -46,5 +51,11 @@ public class PaymentController {
     public ResponseEntity<List<TransactionResponse>> getMyHistory(@AuthenticationPrincipal UserDetailsImpl currentUser) {
         System.out.println("USER: " + SecurityContextHolder.getContext().getAuthentication());
         return ResponseEntity.ok(paymentService.getUserHistory(currentUser.getId()));
+    }
+
+    @GetMapping("/ws")
+    public String testWs() {
+        //paymentService.processTransaction();
+        return "Message envoyé";
     }
 }

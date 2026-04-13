@@ -1,23 +1,26 @@
 package com.medipay.service;
 
 import com.medipay.dto.TransactionResponse;
+import com.medipay.entity.Transaction;
 import com.medipay.repository.TransactionRepository;
 import jakarta.transaction.Transactional;
-import org.springframework.beans.factory.annotation.Autowired;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
 import java.util.stream.Collectors;
 
 @Service
+@RequiredArgsConstructor
 @Transactional
 public class TransactionService {
-    @Autowired
-    private TransactionRepository transactionRepository;
+    private final TransactionRepository transactionRepository;
 
     public List<TransactionResponse> getAllTransactionsForAdmin() {
         // Récupérer toutes les transactions triées par date décroissante
-        return transactionRepository.findAllByOrderByTimestampDesc().stream().map(tx -> {
+        List<Transaction> transactions = transactionRepository.findAllByOrderByTimestampDesc();
+
+        return transactions.stream().map(tx -> {
             TransactionResponse dto = new TransactionResponse();
             dto.setId(tx.getId());
             dto.setReceiverName(tx.getReceiverWallet().getUser().getUsername());

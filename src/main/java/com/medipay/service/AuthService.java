@@ -13,6 +13,7 @@ import com.medipay.utils.JwtUtils;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
@@ -23,6 +24,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
+import java.util.List;
 import java.util.Optional;
 
 @Service
@@ -36,6 +38,17 @@ public class AuthService {
     private final JwtUtils jwtUtils;
     private final UserMapper userMapper;
     private final PasswordEncoder passwordEncoder;
+    private final SimpMessagingTemplate messagingTemplate;
+
+    public List<UserResponse> processUser() {
+
+        List<User> users = userRepository.findAll();
+        List<UserResponse> userResponses = userMapper.toListUserResponseDto(users);
+
+        // 🔥 envoi temps réel
+        messagingTemplate.convertAndSend("/topic/users", userResponses);
+        return userResponses;
+    }
 
     @Transactional
     public User registerUser(SignupRequest request) {
@@ -56,6 +69,8 @@ public class AuthService {
         wallet.setBalance(BigDecimal.ZERO);
         walletRepository.save(wallet);
 
+        processUser();
+        //processUser(savedUser, wallet);
         return savedUser;
     }
 

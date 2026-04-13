@@ -46,6 +46,7 @@ public class WebSecurityConfig {
 //              .authorizeHttpRequests(auth -> auth.anyRequest().permitAll()); //Annule la securitée
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/api/auth/**").permitAll()
+                        .requestMatchers("/ws/**").permitAll()
                         .requestMatchers("/actuator/health").permitAll()
                         .requestMatchers(
                                 "/v3/api-docs/**",

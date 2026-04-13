@@ -11,6 +11,7 @@ import com.medipay.repository.TransactionRepository;
 import com.medipay.repository.UserRepository;
 import com.medipay.repository.WalletRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
@@ -30,6 +31,18 @@ public class PaymentService {
     private final TransactionRepository transactionRepository;
     private final UserRepository userRepository;
     private final TransactionMapper transactionMapper;
+    private final SimpMessagingTemplate messagingTemplate;
+
+    @Transactional
+    public void processTransaction(Transaction ts) {
+        // sauvegarde en base
+        transactionRepository.save(ts);
+        List<Transaction> tx = transactionRepository.findAll();
+        List<TransactionResponse> transactionResponses = transactionMapper.toResponseList(tx);
+
+        // 🔥 envoi temps réel
+        messagingTemplate.convertAndSend("/topic/transactions", transactionResponses);
+    }
 
     // 1. Créditer un client (Réservé à l'Admin)
     @Transactional
@@ -53,8 +66,11 @@ public class PaymentService {
         transaction.setAmount(amount);
         transaction.setType(TransactionType.DEPOSIT);
         transaction.setStatus(TransactionStatus.COMPLETED);
-        transaction.setDescription("Dépôt effectué par l'administrateur");
-
+        transaction.setDescription("Dépôt effectué avec succès."+
+                "`\n Expediteur: "+ senderWallet.getUser().getUsername()+
+                ",\n Bénéficiaire: " + wallet.getUser().getUsername()
+        );
+        processTransaction(transaction);// Déclenche le WebSocket
         return transactionRepository.save(transaction);
     }
 
@@ -95,8 +111,12 @@ public class PaymentService {
         transaction.setAmount(amount);
         transaction.setType(TransactionType.PAYMENT);
         transaction.setStatus(TransactionStatus.COMPLETED);
-        transaction.setDescription("Paiement pharmacie via QR Code: " + qrCodeValue);
+        transaction.setDescription("Paiement pharmacie via QR Code. "+
+                        "\n Expediteur: " + clientWallet.getUser().getUsername()+
+                ",\n Bénéficiaire: " + pharmacistWallet.getUser().getUsername()
+        );
 
+        processTransaction(transaction); // Déclenche le WebSocket
         return transactionRepository.save(transaction);
     }
 
