@@ -29,6 +29,7 @@ public class PaymentService {
     private final TransactionMapper transactionMapper;
     private final SimpMessagingTemplate messagingTemplate;
     private final QRCodeRepository qrCodeRepository;
+    private final NotificationService notificationService;
 
     @Transactional
     public void processTransaction(Transaction ts) {
@@ -81,6 +82,9 @@ public class PaymentService {
                 "`\n Expediteur: "+ senderWallet.getUser().getUsername()+
                 ",\n Bénéficiaire: " + wallet.getUser().getUsername()
         );
+
+        notificationService.notifyUser(wallet.getUser().getUsername(),
+                        "Votre compte a été crédité de"+ amount+ "XAF", "DEPOSIT");
         processTransaction(transaction);// Déclenche le WebSocket
         return transactionRepository.save(transaction);
     }
@@ -96,15 +100,6 @@ public class PaymentService {
 
         // Vérification cruciale du solde
         if (clientWallet.getBalance().compareTo(amount) < 0) {
-            // Enregistrement de la transaction
-//            Transaction transaction = new Transaction();
-//            transaction.setSenderWallet(clientWallet);
-//            transaction.setReceiverWallet(pharmacistWallet);
-//            transaction.setAmount(amount);
-//            transaction.setType(TransactionType.PAYMENT);
-//            transaction.setStatus(TransactionStatus.FAILED);
-//            transaction.setDescription("Solde insuffisant pour effectuer ce paiement ");
-//            transactionRepository.save(transaction);
             throw new RuntimeException("Solde insuffisant pour effectuer ce paiement");
         }
 
@@ -127,6 +122,8 @@ public class PaymentService {
                 ",\n Bénéficiaire: " + pharmacistWallet.getUser().getUsername()
         );
 
+        notificationService.notifyUser(pharmacistWallet.getUser().getUsername(),
+                "Nouveau paiement reçu de "+ amount+ "XAF", "PAYMENT");
         markAsUsed(qrCodeValue); // Marque le qrCode comme déjà utilisé
         processTransaction(transaction); // Déclenche le WebSocket
         return transactionRepository.save(transaction);
@@ -176,6 +173,8 @@ public class PaymentService {
         // 6. Notification Temps Réel (Optionnel via WebSocket)
         processTransaction(tx); // Déclenche le WebSocket
         // notificationService.sendToUser(pharmacistId, "Paiement reçu : " + amount + " FCFA");
+        notificationService.notifyUser(pharmacistWallet.get().getUser().getUsername(),
+                "Nouveau paiement reçu de "+ amount+ "XAF", "PAYMENT");
         return tx;
     }
 
