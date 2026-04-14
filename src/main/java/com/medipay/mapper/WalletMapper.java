@@ -2,7 +2,9 @@ package com.medipay.mapper;
 
 import com.medipay.dto.WalletResponse;
 import com.medipay.entity.Wallet;
+import org.springframework.stereotype.Component;
 
+@Component
 public class WalletMapper {
 
     public WalletResponse toDto(Wallet wallet) {

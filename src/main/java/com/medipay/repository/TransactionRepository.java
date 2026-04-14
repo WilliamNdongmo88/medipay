@@ -15,6 +15,7 @@ public interface TransactionRepository extends JpaRepository<Transaction, Long> 
     List<Transaction> findBySenderWalletOrderByTimestampDesc(Wallet senderWallet);
     List<Transaction> findByReceiverWalletOrderByTimestampDesc(Wallet receiverWallet);
     List<Transaction> findAllByOrderByTimestampDesc();
+    List<Transaction> findByReceiverWalletId(Long walletId);
 
     @Query("""
         SELECT t FROM Transaction t

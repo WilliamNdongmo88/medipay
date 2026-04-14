@@ -12,7 +12,10 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
+import java.net.URLEncoder;
 import java.util.Map;
+
+//import static javax.crypto.Cipher.SECRET_KEY;
 
 @RestController
 @RequestMapping("/api/qrcode" )
@@ -33,5 +36,27 @@ public class QRCodeController {
         QRCode qrCode = qrCodeService.generateQRCode(pharmacist, qrCodeRequest.getAmount());
 
         return ResponseEntity.ok(Map.of("qrCodeValue", qrCode.getCodeValue(), "amount", qrCode.getAmount()));
+    }
+
+    @GetMapping("/generate/{pharmacistId}")
+    public ResponseEntity<byte[]> generateDynamicQrCode(@PathVariable Long pharmacistId) throws Exception {
+
+        User pharmacist = userRepository.findById(pharmacistId)
+                .orElseThrow(() -> new RuntimeException("Pharmacien introuvable"));
+
+//        String data = "pharmacistId=" + pharmacist.getId() +
+//                      "&name=" + URLEncoder.encode(pharmacist.getUsername(), "UTF-8");;
+//        String signature = hmacSHA256(data, SECRET_KEY);
+//        String content = "medipay://pay?" + data + "&sig=" + signature;
+
+        String content = "medipay://pay?pharmacistId="
+                + pharmacist.getId()
+                + "&name=" + URLEncoder.encode(pharmacist.getUsername(), "UTF-8");
+
+        byte[] qrImage = qrCodeService.generateDynamicQrCode(content, 300, 300);
+
+        return ResponseEntity.ok()
+                .header("Content-Type", "image/png")
+                .body(qrImage);
     }
 }

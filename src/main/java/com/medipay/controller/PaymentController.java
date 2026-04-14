@@ -47,6 +47,21 @@ public class PaymentController {
         return ResponseEntity.ok(Map.of("message", "Paiement effectué", "transactionId", transaction.getId()));
     }
 
+    @PostMapping("/pay-open")
+    public ResponseEntity<?> processPaymentStatic(
+            @AuthenticationPrincipal UserDetailsImpl currentUser,
+            @RequestBody PaymentRequest paymentRequest) {
+
+        // Exécution du paiement
+        Transaction transaction = paymentService.executeOpenPayment(
+                currentUser.getId(),
+                paymentRequest.getPharmacistId(),
+                paymentRequest.getAmount()
+        );
+
+        return ResponseEntity.ok(Map.of("message", "Paiement effectué", "transactionId", transaction.getId()));
+    }
+
     @GetMapping("/history")
     public ResponseEntity<List<TransactionResponse>> getMyHistory(@AuthenticationPrincipal UserDetailsImpl currentUser) {
         System.out.println("USER: " + SecurityContextHolder.getContext().getAuthentication());

@@ -11,6 +11,8 @@ import java.time.LocalDateTime;
 @Data
 public class TransactionResponse {
     private Long id;
+    private Long receiverId;
+    private Long senderId;
     private BigDecimal amount;
     private TransactionType type;
     private TransactionStatus status;

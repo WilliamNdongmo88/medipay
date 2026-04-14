@@ -2,36 +2,33 @@ package com.medipay.service;
 
 import com.medipay.dto.TransactionResponse;
 import com.medipay.entity.Transaction;
-import com.medipay.entity.User;
 import com.medipay.enums.TransactionType;
 import com.medipay.enums.TransactionStatus;
 import com.medipay.entity.Wallet;
 import com.medipay.mapper.TransactionMapper;
+import com.medipay.mapper.WalletMapper;
+import com.medipay.repository.QRCodeRepository;
 import com.medipay.repository.TransactionRepository;
-import com.medipay.repository.UserRepository;
 import com.medipay.repository.WalletRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
-import org.springframework.security.authentication.AuthenticationManager;
-import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
-import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
+import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
 public class PaymentService {
     private final WalletRepository walletRepository;
-    private final AuthenticationManager authenticationManager;
     private final TransactionRepository transactionRepository;
-    private final UserRepository userRepository;
     private final TransactionMapper transactionMapper;
     private final SimpMessagingTemplate messagingTemplate;
+    private final QRCodeRepository qrCodeRepository;
 
     @Transactional
     public void processTransaction(Transaction ts) {
@@ -44,7 +41,19 @@ public class PaymentService {
         messagingTemplate.convertAndSend("/topic/transactions", transactionResponses);
     }
 
-    // 1. Créditer un client (Réservé à l'Admin)
+    @Transactional
+    public void processTransactionWallet(Wallet wallet) {
+        // sauvegarde en base
+        List<Transaction> tx = transactionRepository.findByReceiverWalletId(wallet.getId());
+        System.out.println("Taille de la liste: " + tx.size());
+        List<TransactionResponse> transactionResponses = transactionMapper.toResponseList(tx);
+        System.out.println("Taille de la liste: " + transactionResponses.size());
+
+        // 🔥 envoi temps réel
+        messagingTemplate.convertAndSend("/topic/wallets", transactionResponses);
+    }
+
+    // 1. Créditer un client fermé (Réservé à l'Admin)
     @Transactional
     public Transaction creditClient(Long userId, BigDecimal amount) {
         UserDetailsImpl userDetails = (UserDetailsImpl) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
@@ -59,6 +68,8 @@ public class PaymentService {
 
         wallet.setBalance(wallet.getBalance().add(amount));
         walletRepository.save(wallet);
+
+        //processTransactionWallet(wallet); // Déclenche le WebSocket
 
         Transaction transaction = new Transaction();
         transaction.setSenderWallet(senderWallet);
@@ -116,9 +127,58 @@ public class PaymentService {
                 ",\n Bénéficiaire: " + pharmacistWallet.getUser().getUsername()
         );
 
+        markAsUsed(qrCodeValue); // Marque le qrCode comme déjà utilisé
         processTransaction(transaction); // Déclenche le WebSocket
         return transactionRepository.save(transaction);
     }
+
+    // 2. Effectuer un paiement ouvert (Client vers Pharmacien)
+    @Transactional
+    public Transaction executeOpenPayment(Long patientId, Long pharmacistId, BigDecimal amount) {
+        // 1. Validation de sécurité de base
+        if (amount.compareTo(BigDecimal.ZERO) <= 0) {
+            throw new IllegalArgumentException("Le montant doit être supérieur à zéro.");
+        }
+
+        // 2. Récupération des portefeuilles
+        Optional<Wallet> patientWallet = walletRepository.findByUserId(patientId);
+        Optional<Wallet> pharmacistWallet = walletRepository.findByUserId(pharmacistId);
+
+        // 3. Vérification du solde du patient
+        if (patientWallet.get().getBalance().compareTo(amount) < 0) {
+            throw new RuntimeException("Solde insuffisant pour effectuer ce paiement.");
+        }
+
+        // 4. Transfert atomique
+        patientWallet.get().setBalance(
+                patientWallet.get().getBalance().subtract(amount)
+        );
+        pharmacistWallet.get().setBalance(
+                pharmacistWallet.get().getBalance().add(amount)
+        );
+
+        //processTransactionWallet(pharmacistWallet.get()); // Déclenche le WebSocket
+
+        // 5. Création de la transaction
+        Transaction tx = new Transaction();
+        tx.setSenderWallet(patientWallet.get());
+        tx.setReceiverWallet(pharmacistWallet.get());
+        tx.setAmount(amount);
+        tx.setType(TransactionType.PAYMENT);
+        tx.setStatus(TransactionStatus.COMPLETED);
+        tx.setDescription("Paiement libre en pharmacie"+
+                "\n Expediteur: " + patientWallet.get().getUser().getUsername()+
+                ",\n Bénéficiaire: " + pharmacistWallet.get().getUser().getUsername());
+        tx.setTimestamp(LocalDateTime.now());
+
+        transactionRepository.save(tx);
+
+        // 6. Notification Temps Réel (Optionnel via WebSocket)
+        processTransaction(tx); // Déclenche le WebSocket
+        // notificationService.sendToUser(pharmacistId, "Paiement reçu : " + amount + " FCFA");
+        return tx;
+    }
+
 
     // 3. Réinitialiser le solde d'un pharmacien (Admin)
     @Transactional
@@ -147,6 +207,14 @@ public class PaymentService {
         List<Transaction> transactions = transactionRepository.findAllWithUsers(wallet);
 
         return transactionMapper.toResponseList(transactions);
+    }
+
+    public void markAsUsed(String codeValue) {
+        int updatedRows = qrCodeRepository.updateIsUsedStatus(codeValue, true);
+
+        if (updatedRows == 0) {
+            throw new RuntimeException("Échec de la mise à jour : QR Code introuvable.");
+        }
     }
 }
 

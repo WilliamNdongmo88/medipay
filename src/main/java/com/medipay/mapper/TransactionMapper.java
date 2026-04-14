@@ -27,6 +27,7 @@ public class TransactionMapper {
         // 🔥 Sender
         if (transaction.getSenderWallet() != null &&
                 transaction.getSenderWallet().getUser() != null) {
+            response.setSenderId(transaction.getSenderWallet().getUser().getId());
             response.setSenderName(
                     transaction.getSenderWallet().getUser().getUsername()
             );
@@ -38,6 +39,7 @@ public class TransactionMapper {
         // 🔥 Receiver
         if (transaction.getReceiverWallet() != null &&
                 transaction.getReceiverWallet().getUser() != null) {
+            response.setReceiverId(transaction.getReceiverWallet().getUser().getId());
             response.setReceiverName(
                     transaction.getReceiverWallet().getUser().getUsername()
             );
