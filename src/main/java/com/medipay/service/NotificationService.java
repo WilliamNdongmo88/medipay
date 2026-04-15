@@ -14,14 +14,16 @@ public class NotificationService {
 
     private final SimpMessagingTemplate messagingTemplate;
 
-    public void notifyUser(String username, String message, String type) {
+    public void notifyUser(String message, String senderName, Long receiverId, String type) {
         Map<String, String> payload = new HashMap<>();
         payload.put("message", message);
+        payload.put("senderName", senderName);
+        payload.put("receiverId", String.valueOf(receiverId));
         payload.put("type", type); // "DEPOSIT" ou "PAYMENT"
         payload.put("timestamp", LocalDateTime.now().toString());
 
         // Envoie le message uniquement à l'utilisateur concerné
         //messagingTemplate.convertAndSendToUser(username, "/topic/notifications", payload);
-        messagingTemplate.convertAndSend("/topic/transactions", payload);
+        messagingTemplate.convertAndSend("/topic/notifications", payload);
     }
 }

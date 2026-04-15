@@ -83,8 +83,12 @@ public class PaymentService {
                 ",\n Bénéficiaire: " + wallet.getUser().getUsername()
         );
 
-        notificationService.notifyUser(wallet.getUser().getUsername(),
-                        "Votre compte a été crédité de"+ amount+ "XAF", "DEPOSIT");
+        notificationService.notifyUser(
+                "Votre compte a été crédité de "+ amount+ " XAF",
+                senderWallet.getUser().getUsername(),
+                wallet.getId(),
+                "DEPOSIT");
+
         processTransaction(transaction);// Déclenche le WebSocket
         return transactionRepository.save(transaction);
     }
@@ -122,8 +126,12 @@ public class PaymentService {
                 ",\n Bénéficiaire: " + pharmacistWallet.getUser().getUsername()
         );
 
-        notificationService.notifyUser(pharmacistWallet.getUser().getUsername(),
-                "Nouveau paiement reçu de "+ amount+ "XAF", "PAYMENT");
+        notificationService.notifyUser(
+                "Nouveau paiement reçu de "+ amount+ " XAF",
+                clientWallet.getUser().getUsername(),
+                pharmacistWallet.getId(),
+                "PAYMENT");
+
         markAsUsed(qrCodeValue); // Marque le qrCode comme déjà utilisé
         processTransaction(transaction); // Déclenche le WebSocket
         return transactionRepository.save(transaction);
@@ -172,9 +180,12 @@ public class PaymentService {
 
         // 6. Notification Temps Réel (Optionnel via WebSocket)
         processTransaction(tx); // Déclenche le WebSocket
-        // notificationService.sendToUser(pharmacistId, "Paiement reçu : " + amount + " FCFA");
-        notificationService.notifyUser(pharmacistWallet.get().getUser().getUsername(),
-                "Nouveau paiement reçu de "+ amount+ "XAF", "PAYMENT");
+        notificationService.notifyUser(
+                "Nouveau paiement reçu de "+ amount+ " XAF",
+                patientWallet.get().getUser().getUsername(),
+                pharmacistWallet.get().getId(),
+                "PAYMENT");
+
         return tx;
     }
 
