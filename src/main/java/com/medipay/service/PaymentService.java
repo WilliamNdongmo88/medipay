@@ -42,18 +42,6 @@ public class PaymentService {
         messagingTemplate.convertAndSend("/topic/transactions", transactionResponses);
     }
 
-    @Transactional
-    public void processTransactionWallet(Wallet wallet) {
-        // sauvegarde en base
-        List<Transaction> tx = transactionRepository.findByReceiverWalletId(wallet.getId());
-        System.out.println("Taille de la liste: " + tx.size());
-        List<TransactionResponse> transactionResponses = transactionMapper.toResponseList(tx);
-        System.out.println("Taille de la liste: " + transactionResponses.size());
-
-        // 🔥 envoi temps réel
-        messagingTemplate.convertAndSend("/topic/wallets", transactionResponses);
-    }
-
     // 1. Créditer un client fermé (Réservé à l'Admin)
     @Transactional
     public Transaction creditClient(Long userId, BigDecimal amount) {
@@ -68,7 +56,9 @@ public class PaymentService {
                 .orElseThrow(() -> new RuntimeException("Portefeuille non trouvé pour l'utilisateur ID: " + userId));
 
         wallet.setBalance(wallet.getBalance().add(amount));
+        senderWallet.setBalance(senderWallet.getBalance().add(amount));
         walletRepository.save(wallet);
+        walletRepository.save(senderWallet);
 
         //processTransactionWallet(wallet); // Déclenche le WebSocket
 
