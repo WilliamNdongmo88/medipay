@@ -3,14 +3,11 @@ package com.medipay.controller;
 import com.medipay.dto.*;
 import com.medipay.entity.User;
 import com.medipay.service.AuthService;
-import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.Map;
-import java.util.Optional;
 
 @RestController
 @RequestMapping("/api/auth" )

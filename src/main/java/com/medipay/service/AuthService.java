@@ -4,13 +4,13 @@ import com.medipay.dto.*;
 import com.medipay.entity.RefreshToken;
 import com.medipay.entity.User;
 import com.medipay.entity.Wallet;
-import com.medipay.enums.Role;
 import com.medipay.mapper.UserMapper;
 import com.medipay.repository.RefreshTokenRepository;
 import com.medipay.repository.UserRepository;
 import com.medipay.repository.WalletRepository;
 import com.medipay.utils.JwtUtils;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
@@ -25,6 +25,8 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.util.List;
+import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 
 @Service
@@ -40,13 +42,18 @@ public class AuthService {
     private final PasswordEncoder passwordEncoder;
     private final SimpMessagingTemplate messagingTemplate;
 
+    @Value("${spring.profiles.active}")
+    private String env;
+
     public List<UserResponse> processUser() {
 
         List<User> users = userRepository.findAll();
         List<UserResponse> userResponses = userMapper.toListUserResponseDto(users);
 
-        // 🔥 envoi temps réel
-        messagingTemplate.convertAndSend("/topic/users", userResponses);
+        if(Objects.equals(env, "dev") || Objects.equals(env, "prod")) {
+            // 🔥 envoi temps réel
+            messagingTemplate.convertAndSend("/topic/users", userResponses);
+        }
         return userResponses;
     }
 
@@ -115,10 +122,11 @@ public class AuthService {
 
         if (!exists) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND)
-                    .body(new RuntimeException("Erreur : Aucun compte n'est associé à cet email."));
+                    //.body(new RuntimeException("Erreur : Aucun compte n'est associé à cet email."));
+                    .body(Map.of("message", "Aucun compte associé à cet email"));
         }
 
-        return ResponseEntity.ok(new RuntimeException("Email vérifié avec succès."));
+        return ResponseEntity.ok(Map.of("message", "Email vérifié avec succès."));
     }
 
     @Transactional
@@ -136,6 +144,6 @@ public class AuthService {
 
         userRepository.save(user);
 
-        return ResponseEntity.ok(new RuntimeException("Mot de passe réinitialisé avec succès !"));
+        return ResponseEntity.ok(Map.of("message", "Mot de passe réinitialisé avec succès !"));
     }
 }

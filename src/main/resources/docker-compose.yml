@@ -29,6 +29,19 @@ services:
     networks:
       - medipay_net
 
+  test-db:
+    image: postgres:17
+    container_name: res-medipay_test
+    restart: always
+    environment:
+      POSTGRES_USER: root
+      POSTGRES_PASSWORD: test-root
+      POSTGRES_DB: test_medipay_db
+    ports:
+      - "5444:5432"
+    networks:
+      - medipay_net
+
   adminer:
     image: adminer
     container_name: adminer_medipay

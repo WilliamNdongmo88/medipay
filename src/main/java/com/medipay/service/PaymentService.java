@@ -6,11 +6,11 @@ import com.medipay.enums.TransactionType;
 import com.medipay.enums.TransactionStatus;
 import com.medipay.entity.Wallet;
 import com.medipay.mapper.TransactionMapper;
-import com.medipay.mapper.WalletMapper;
 import com.medipay.repository.QRCodeRepository;
 import com.medipay.repository.TransactionRepository;
 import com.medipay.repository.WalletRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
@@ -19,6 +19,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 
 @Service
@@ -31,15 +32,20 @@ public class PaymentService {
     private final QRCodeRepository qrCodeRepository;
     private final NotificationService notificationService;
 
+    @Value("${spring.profiles.active}")
+    private String env;
+
     @Transactional
     public void processTransaction(Transaction ts) {
-        // sauvegarde en base
-        transactionRepository.save(ts);
-        List<Transaction> tx = transactionRepository.findAll();
-        List<TransactionResponse> transactionResponses = transactionMapper.toResponseList(tx);
+        if(Objects.equals(env, "dev") || Objects.equals(env, "prod")) {
+            // sauvegarde en base
+            transactionRepository.save(ts);
+            List<Transaction> tx = transactionRepository.findAll();
+            List<TransactionResponse> transactionResponses = transactionMapper.toResponseList(tx);
 
-        // 🔥 envoi temps réel
-        messagingTemplate.convertAndSend("/topic/transactions", transactionResponses);
+            // 🔥 envoi temps réel
+            messagingTemplate.convertAndSend("/topic/transactions", transactionResponses);
+        }
     }
 
     // 1. Créditer un client fermé (Réservé à l'Admin)
@@ -59,8 +65,6 @@ public class PaymentService {
         senderWallet.setBalance(senderWallet.getBalance().add(amount));
         walletRepository.save(wallet);
         walletRepository.save(senderWallet);
-
-        //processTransactionWallet(wallet); // Déclenche le WebSocket
 
         Transaction transaction = new Transaction();
         transaction.setSenderWallet(senderWallet);
@@ -152,8 +156,6 @@ public class PaymentService {
                 pharmacistWallet.get().getBalance().add(amount)
         );
 
-        //processTransactionWallet(pharmacistWallet.get()); // Déclenche le WebSocket
-
         // 5. Création de la transaction
         Transaction tx = new Transaction();
         tx.setSenderWallet(patientWallet.get());
@@ -171,11 +173,10 @@ public class PaymentService {
         // 6. Notification Temps Réel (Optionnel via WebSocket)
         processTransaction(tx); // Déclenche le WebSocket
         notificationService.notifyUser(
-                "Nouveau paiement reçu de "+ amount+ " XAF",
+                "Nouveau paiement reçu de " + amount + " XAF",
                 patientWallet.get().getUser().getUsername(),
                 pharmacistWallet.get().getId(),
                 "PAYMENT");
-
         return tx;
     }
 
