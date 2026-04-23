@@ -2,7 +2,6 @@ package com.medipay.controller;
 
 import com.medipay.dto.PaymentRequest;
 import com.medipay.dto.TransactionResponse;
-import com.medipay.dto.UserResponse;
 import com.medipay.entity.QRCode;
 import com.medipay.entity.Transaction;
 import com.medipay.service.AuthService;
