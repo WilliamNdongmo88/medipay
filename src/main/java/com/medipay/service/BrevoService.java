@@ -57,7 +57,7 @@ public class BrevoService {
 
             // Créer le contexte pour le template
             Context context = new Context();
-            context.setVariable("userName", "Will");
+            context.setVariable("userName", "William");
             context.setVariable("title", "Rapport de transactions utilisateurs");
             context.setVariable("appName", senderName);
 
