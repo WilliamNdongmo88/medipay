@@ -1,5 +1,6 @@
 package com.medipay.config;
 
+import com.medipay.service.BrevoService;
 import org.springframework.batch.core.*;
 import org.springframework.batch.core.configuration.JobRegistry;
 import org.springframework.batch.core.launch.JobLauncher;
@@ -55,8 +56,8 @@ public class BatchConfig {
     @Autowired
     private PdfGeneratorService pdfGeneratorService;
 
-//    @Autowired
-//    private BrevoService brevoService;
+    @Autowired
+    private BrevoService brevoService;
 
     @Value("${brevo.recipient.email}")
     private String recipientEmail;
@@ -95,7 +96,7 @@ public class BatchConfig {
                 String attachmentName = "user_transactions_report_" + LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyyMMdd_HHmmss")) + ".pdf";
 
                 // TODO: Remplacer \"recipientEmail\" par l\"adresse e-mail réelle du destinataire
-                //brevoService.sendEmailWithAttachment(recipientEmail, subject, body, pdfBytes, attachmentName);
+                brevoService.sendEmailWithAttachment(recipientEmail, subject, body, pdfBytes, attachmentName);
 
                 // Vider la table après l\"envoi du PDF
                 //transactionRepository.deleteAll();
