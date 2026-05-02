@@ -15,6 +15,7 @@ import java.util.stream.Collectors;
 @Transactional
 public class TransactionService {
     private final TransactionRepository transactionRepository;
+    private final PdfGeneratorService pdfGeneratorService;
 
     public List<TransactionResponse> getAllTransactionsForAdmin() {
         // Récupérer toutes les transactions triées par date décroissante
