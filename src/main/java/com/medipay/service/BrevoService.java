@@ -77,7 +77,7 @@ public class BrevoService {
                     .name(senderName));
             sendSmtpEmail.setTo(Collections.singletonList(new SendSmtpEmailTo().email(to)));
             sendSmtpEmail.setSubject(subject);
-            sendSmtpEmail.setHtmlContent(body);
+            sendSmtpEmail.setHtmlContent(htmlContent);
 
             sendSmtpEmail.setAttachment(Collections.singletonList(brevoAttachment));
 
