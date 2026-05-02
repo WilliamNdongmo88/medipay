@@ -1,5 +1,6 @@
 package com.medipay.controller;
 
+import com.medipay.config.BatchConfig;
 import com.medipay.dto.*;
 import com.medipay.entity.User;
 import com.medipay.service.AuthService;
@@ -14,6 +15,7 @@ import java.util.Map;
 @RequiredArgsConstructor
 public class AuthController {
     private final AuthService authService;
+    private final BatchConfig batchConfig;
 
     @PostMapping("/signup")
     public ResponseEntity<?> registerUser(@RequestBody SignupRequest signupRequest) {
@@ -41,6 +43,12 @@ public class AuthController {
     @PostMapping("/reset-password")
     public ResponseEntity<?> resetPassword(@RequestBody ResetPasswordRequest request) {
         return authService.resetPassword(request);
+    }
+
+    @PostMapping("/batch")
+    public String testBatch() {
+        batchConfig.runTransactionsJob();
+        return "Batch exécuté avec succès";
     }
 }
 
